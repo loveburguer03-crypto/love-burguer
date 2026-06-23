@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Love Burguer</title>
+<style>
+*{box-sizing:border-box} body{margin:0;background:#080808;color:#fff;font-family:Arial,sans-serif}
+header{text-align:center;padding:24px 14px;background:#1b0d05;border-bottom:4px solid #ff7a00}
+.logo{background:#2b1106;color:#ff7a00;border-radius:20px;padding:25px;max-width:300px;margin:auto;font-size:40px;font-weight:900}
+h1{color:#ff2a00;margin:10px 0 0}.slogan{color:#ff9a18;font-weight:700}
+main{padding:14px;max-width:1050px;margin:auto}.hero,.pedido,.admin{border:2px solid #ff7a00;border-radius:18px;padding:16px;background:#111;margin:16px 0}
+.titulo{border-left:7px solid #ff7a00;padding-left:10px;margin-top:28px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:13px}
+.card{background:#111;border:2px solid #994400;border-radius:16px;padding:14px}
+.card h3{margin:0 0 7px;color:#ff7a00;text-transform:uppercase}.desc{color:#ddd}.preco{font-size:28px;font-weight:900;margin:10px 0}
+button{width:100%;padding:13px;border:0;border-radius:12px;background:#ff7a00;color:#111;font-weight:900;font-size:16px;margin-top:7px}
+.finalizar,.btnOk{background:#12bd58;color:#fff}.btnDanger{background:#b3261e;color:#fff}
+input,select,textarea{width:100%;padding:14px;margin:7px 0;border-radius:13px;border:1px solid #854000;background:#171717;color:#fff;font-size:16px}
+textarea{min-height:80px}.item{border-bottom:1px dashed #7a3900;padding:10px 0;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.btnMenos{width:42px;background:#222;color:#ff7a00;border:1px solid #ff7a00}.total{text-align:right;font-size:29px;font-weight:900}
+.aviso{background:#211005;border:1px solid #ff7a00;border-radius:13px;padding:11px;color:#ffd09b;margin:10px 0;font-size:14px}
+.hidden{display:none!important} footer{text-align:center;color:#aaa;padding:25px}
+</style>
+</head>
+<body>
+<header>
+<div class="logo">🍔 LOVE<br>BURGUER</div>
+<h1>LOVE BURGUER</h1>
+<div class="slogan">Amor em tudo que a gente faz! ❤️</div>
+</header>
+
+<main>
+<section class="hero">
+<h2>Hambúrguer <b style="color:#ff7a00">artesanal</b> na grelha</h2>
+<p>Delivery rápido, lanches caprichados e combos especiais.</p>
+</section>
+
+<h2 class="titulo">🍔 Lanches</h2><div class="grid" id="lanches"></div>
+<h2 class="titulo">🔥 Combos</h2><div class="grid" id="combos"></div>
+<h2 class="titulo">🍟 Acompanhamentos</h2><div class="grid" id="acomp"></div>
+<h2 class="titulo">🥤 Bebidas</h2><div class="grid" id="bebidas"></div>
+
+<section class="pedido" id="pedido">
+<h2 style="color:#ff7a00">🛒 Seu pedido</h2>
+<div id="itens">Nenhum item ainda.</div>
+<div class="aviso">🚚 Entrega: consultar valor conforme o bairro.</div>
+<div class="total" id="total">Total: R$ 0,00</div>
+
+<input id="nome" placeholder="Seu nome">
+<input id="telefone" placeholder="Seu telefone">
+<input id="endereco" placeholder="Endereço completo para entrega">
+<input id="bairro" placeholder="Seu bairro">
+
+<select id="pagamento" onchange="trocoBox()">
+<option value="">Forma de pagamento</option>
+<option value="Pix">Pix</option>
+<option value="Dinheiro">Dinheiro</option>
+<option value="Cartão de Débito">Cartão de Débito</option>
+<option value="Cartão de Crédito">Cartão de Crédito</option>
+</select>
+<input id="troco" class="hidden" placeholder="Troco para quanto?">
+<textarea id="obs" placeholder="Observações do pedido"></textarea>
+<button class="finalizar" onclick="finalizar()">📲 Finalizar pelo WhatsApp</button>
+</section>
+
+<section class="admin">
+<h2 style="color:#ff7a00">🔐 Área Restrita</h2>
+<input id="senha" type="password" placeholder="Digite a senha">
+<button onclick="abrirPainel()">Entrar</button>
+
+<div id="painel" class="hidden">
+<h3>Adicionar produto</h3>
+<input id="novoNome" placeholder="Nome do produto">
+<input id="novoDesc" placeholder="Descrição">
+<input id="novoPreco" type="number" step="0.01" placeholder="Preço">
+<select id="novoCat">
+<option value="lanches">Lanches</option>
+<option value="combos">Combos</option>
+<option value="acomp">Acompanhamentos</option>
+<option value="bebidas">Bebidas</option>
+</select>
+<button class="btnOk" onclick="adicionarProdutoAdmin()">Adicionar produto</button>
+
+<h3>Editar ou remover produtos</h3>
+<div id="edicao"></div>
+<button class="btnOk" onclick="salvar()">Salvar alterações</button>
+<button class="btnDanger" onclick="resetarProdutos()">Resetar cardápio original</button>
+<p class="aviso">As alterações ficam salvas neste aparelho/navegador.</p>
+</div>
+</section>
+</main>
+
+<footer>🍔 Love Burguer • Delivery artesanal</footer>
+
+<script>
+var whatsapp = "5511948376967";
+var produtos = [];
+var carrinho = [];
+
+function produtosPadrao(){
+ return [
+  {cat:"lanches",nome:"Clássico da Casa",desc:"Pão tostado, carne 120g, queijo, salada e molho especial.",preco:22.90},
+  {cat:"lanches",nome:"Bacon Supremo",desc:"Carne 120g, queijo derretido e bacon crocante.",preco:25.90},
+  {cat:"lanches",nome:"Brabo da Casa",desc:"Carne 120g, queijo, bacon, ovo e salada.",preco:29.90},
+  {cat:"lanches",nome:"Duplo Insano",desc:"2 carnes 120g, muito queijo e bacon.",preco:32.90},
+  {cat:"lanches",nome:"Triplo Monstro",desc:"3 carnes, queijo em dobro e molho especial.",preco:36.90},
+
+  {cat:"combos",nome:"5 Lanches + Batata",desc:"Combo família completo.",preco:104.90},
+  {cat:"combos",nome:"5 X-Saladas + Batata + Frango Frito",desc:"5 X-Saladas + batata frita + frango frito.",preco:119.90},
+  {cat:"combos",nome:"Lanche + Batata",desc:"1 lanche artesanal + batata frita.",preco:32.90},
+  {cat:"combos",nome:"Lanche + Batata + Frango",desc:"1 lanche + batata + 8 pedaços de frango.",preco:39.90},
+  {cat:"combos",nome:"2 Lanches + Batata",desc:"Combo para dividir.",preco:59.90},
+  {cat:"combos",nome:"4 Lanches + Batata",desc:"Combo família.",preco:89.90},
+  {cat:"combos",nome:"Batata Frita",desc:"Porção normal de batata frita.",preco:12.00},
+
+  {cat:"acomp",nome:"Batata Frita",desc:"Porção normal de batata frita.",preco:12.00},
+  {cat:"acomp",nome:"Batata Suprema",desc:"Batata com cheddar e bacon.",preco:18.00},
+  {cat:"acomp",nome:"Porção de Frango Frito",desc:"12 pedaços crocantes.",preco:20.00},
+
+  {cat:"bebidas",nome:"Lata 350ml",desc:"Refrigerante lata.",preco:6.00},
+  {cat:"bebidas",nome:"Refrigerante 2L",desc:"Refrigerante 2 litros.",preco:14.00}
+ ];
+}
+
+try{ produtos = JSON.parse(localStorage.getItem("loveProdutosNovo")) || produtosPadrao(); }
+catch(e){ produtos = produtosPadrao(); }
+
+function dinheiro(v){return "R$ " + Number(v).toFixed(2).replace(".", ",")}
+function el(id){return document.getElementById(id)}
+
+function render(){
+ ["lanches","combos","acomp","bebidas"].forEach(function(id){el(id).innerHTML=""});
+ produtos.forEach(function(p,i){
+  var d=document.createElement("div");
+  d.className="card";
+  d.innerHTML='<h3>'+p.nome+'</h3><p class="desc">'+p.desc+'</p><div class="preco">'+dinheiro(p.preco)+'</div><button onclick="add('+i+')">Adicionar</button>';
+  if(el(p.cat)) el(p.cat).appendChild(d);
+ });
+}
+
+function add(i){
+ var p=produtos[i], achou=null;
+ carrinho.forEach(function(x){if(x.nome===p.nome) achou=x});
+ if(achou) achou.qtd++;
+ else carrinho.push({cat:p.cat,nome:p.nome,desc:p.desc,preco:p.preco,qtd:1});
+ atualizar(); location.hash="pedido";
+}
+
+function menos(i){carrinho[i].qtd--; if(carrinho[i].qtd<=0)carrinho.splice(i,1); atualizar()}
+function subtotal(){return carrinho.reduce(function(s,x){return s+x.preco*x.qtd},0)}
+
+function atualizar(){
+ if(!carrinho.length) el("itens").innerHTML="Nenhum item ainda.";
+ else el("itens").innerHTML=carrinho.map(function(x,i){
+  return '<div class="item"><div>'+x.qtd+'x <b>'+x.nome+'</b><br><small>'+dinheiro(x.qtd*x.preco)+'</small></div><button class="btnMenos" onclick="menos('+i+')">-</button></div>';
+ }).join("");
+ el("total").innerHTML="Total: "+dinheiro(subtotal());
+}
+
+function trocoBox(){el("troco").className = el("pagamento").value==="Dinheiro" ? "" : "hidden"}
+
+function pedidoNum(){
+ var n=Number(localStorage.getItem("lovePedidoNovo")||"0")+1;
+ localStorage.setItem("lovePedidoNovo",String(n));
+ return String(n).padStart(3,"0");
+}
+
+function finalizar(){
+ if(!carrinho.length){alert("Adicione algum item.");return}
+ var nome=el("nome").value.trim(), tel=el("telefone").value.trim(), end=el("endereco").value.trim(), bai=el("bairro").value.trim(), pag=el("pagamento").value;
+ if(!nome||!tel||!end||!bai||!pag){alert("Preencha nome, telefone, endereço, bairro e pagamento.");return}
+ var itens=carrinho.map(function(x){return x.qtd+"x "+x.nome+" - "+dinheiro(x.qtd*x.preco)}).join("\\n");
+ var msg="🍔 NOVO PEDIDO #"+pedidoNum()+" - LOVE BURGUER\\n\\n👤 Cliente: "+nome+"\\n📞 Telefone: "+tel+"\\n\\n🛒 Pedido:\\n"+itens+"\\n\\n📍 Bairro: "+bai+"\\n🚚 Entrega: consultar valor\\n\\n💳 Pagamento: "+pag+"\\n";
+ if(pag==="Dinheiro") msg+="💵 Troco para: "+(el("troco").value.trim()||"Não informado")+"\\n";
+ msg+="\\n💰 Total sem entrega: "+dinheiro(subtotal())+"\\n⚠️ Valor final depende da taxa de entrega.\\n\\n🏠 Endereço:\\n"+end+"\\n\\n📝 Observações:\\n"+(el("obs").value.trim()||"Nenhuma");
+ window.location.href="https://api.whatsapp.com/send?phone="+whatsapp+"&text="+encodeURIComponent(msg);
+}
+
+function abrirPainel(){
+ if(el("senha").value!=="love2026"){alert("Senha incorreta.");return}
+ el("painel").className="";
+ renderAdmin();
+}
+
+function renderAdmin(){
+ el("edicao").innerHTML=produtos.map(function(p,i){
+  return '<div class="card"><input value="'+p.nome+'" onchange="produtos['+i+'].nome=this.value"><input value="'+p.desc+'" onchange="produtos['+i+'].desc=this.value"><input type="number" step="0.01" value="'+p.preco+'" onchange="produtos['+i+'].preco=Number(this.value)"><select onchange="produtos['+i+'].cat=this.value"><option value="lanches" '+(p.cat==="lanches"?"selected":"")+'>Lanches</option><option value="combos" '+(p.cat==="combos"?"selected":"")+'>Combos</option><option value="acomp" '+(p.cat==="acomp"?"selected":"")+'>Acompanhamentos</option><option value="bebidas" '+(p.cat==="bebidas"?"selected":"")+'>Bebidas</option></select><button class="btnDanger" onclick="removerProdutoAdmin('+i+')">Remover produto</button></div>';
+ }).join("");
+}
+
+function adicionarProdutoAdmin(){
+ var nome=el("novoNome").value.trim(), desc=el("novoDesc").value.trim(), preco=Number(el("novoPreco").value), cat=el("novoCat").value;
+ if(!nome||!desc||!preco){alert("Preencha nome, descrição e preço.");return}
+ produtos.push({cat:cat,nome:nome,desc:desc,preco:preco});
+ salvar(); el("novoNome").value=""; el("novoDesc").value=""; el("novoPreco").value=""; renderAdmin();
+}
+
+function removerProdutoAdmin(i){if(confirm("Remover este produto?")){produtos.splice(i,1); salvar(); renderAdmin();}}
+function salvar(){localStorage.setItem("loveProdutosNovo",JSON.stringify(produtos)); render(); atualizar();}
+function resetarProdutos(){if(confirm("Resetar para o cardápio original?")){localStorage.removeItem("loveProdutosNovo"); produtos=produtosPadrao(); render(); atualizar(); renderAdmin(); alert("Cardápio resetado!");}}
+
+render(); atualizar();
+</script>
+</body>
+</html>
