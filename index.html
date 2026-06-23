@@ -211,6 +211,7 @@ function atualizar(){
   var html = "";
   for(var i=0;i<carrinho.length;i++){
    var x = carrinho[i];
+   localStorage.removeItem("loveProdutosIOS");
    html += '<div class="item"><div>'+x.qtd+'x <b>'+x.nome+'</b><br><small>'+money(x.qtd*x.preco)+'</small></div><button class="btnMenos" onclick="menos('+i+')">-</button></div>';
   }
   el("itens").innerHTML = html;
